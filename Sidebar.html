@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+    <style>
+    .width-100 {
+      width: 100%;
+      box-sizing: border-box;
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+    }
+    label {
+      font-weight: bold;
+    }
+    #options {
+      background-color: #eee;
+      border-color: #eee;
+      border-width: 5px;
+      border-style: solid;
+    }
+    #bot-api-token,
+    #chat-id {
+      margin-bottom: 10px;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar branding-below">
+      <form>
+        <div class="block form-group" id="options">
+          <label for="bot-api-token">Bot API key</label>
+          <input type="text" class="width-100" id="bot-api-token">
+          
+          <label for="chat-id">Chat ID</label>
+          <input type="text" class="width-100" id="chat-id">
+          
+          <label for="message">Message (allows {name} placeholders):</label>
+          <textarea rows="8" cols="40" id="message" class="width-100"></textarea>
+        </div>
+
+        <div class="block" id="button-bar">
+          <button class="action" id="save-settings">Save</button>
+        </div>
+      </form>
+    </div>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js">
+    </script>
+    <script>
+      $(function() {
+        $('#save-settings').click(saveSettingsToServer);
+        google.script.run
+           .withSuccessHandler(loadSettings)
+           .withFailureHandler(showStatus)
+           .withUserObject($('#button-bar').get())
+           .getSettings();
+      });
+
+      function loadSettings(settings) {
+        $('#bot-api-token').val(settings.botApiToken);
+        $('#chat-id').val(settings.chatId);
+        $('#message').val(settings.message);
+      }
+
+      function saveSettingsToServer() {
+        this.disabled = true;
+        $('#status').remove();
+        var creatorNotify = $('#creator-notify').is(':checked');
+        var respondentNotify = $('#respondent-notify').is(':checked');
+        var settings = {
+          'botApiToken': $('#bot-api-token').val(),
+          'chatId': $('#chat-id').val(),
+          'message': $('#message').val(),
+        };
+
+        google.script.run
+            .withSuccessHandler(
+              function(msg, element) {
+                showStatus('Saved settings', $('#button-bar'));
+                element.disabled = false;
+              })
+            .withFailureHandler(
+              function(msg, element) {
+                showStatus(msg, $('#button-bar'));
+                element.disabled = false;
+              })
+            .withUserObject(this)
+            .saveSettings(settings);
+      }
+
+      function showStatus(msg, element) {
+         var div = $('<div>')
+             .attr('id', 'status')
+             .attr('class','error')
+             .text(msg);
+        $(element).after(div);
+      }
+    </script>
+  </body>
+</html>
+
